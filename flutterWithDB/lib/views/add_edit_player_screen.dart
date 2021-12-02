@@ -86,6 +86,58 @@ class _AddEditPlayerScreenState extends State<AddEditPlayerScreen> {
 
           _formKey.currentState!.save();
 
+          if (_nameController.text.isEmpty) {
+            SnackBar snackBar = const SnackBar(
+              content: Text("Invalid name"),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            return;
+          }
+
+          if (_teamController.text.isEmpty) {
+            SnackBar snackBar = const SnackBar(
+              content: Text("Invalid team"),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            return;
+          }
+
+          if (_positionController.text.isEmpty) {
+            SnackBar snackBar = const SnackBar(
+              content: Text("Invalid position"),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            return;
+          }
+
+          try{
+            int.parse(_marketValueController.text);
+          } catch (_) {
+            SnackBar snackBar = const SnackBar(
+              content: Text("Invalid market value"),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            return;
+          }
+
+          if (_positionController.text.isEmpty) {
+            SnackBar snackBar = const SnackBar(
+              content: Text("Invalid position"),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            return;
+          }
+
+          try{
+            int.parse(_ageController.text);
+          } catch (_) {
+            SnackBar snackBar = const SnackBar(
+              content: Text("Invalid market value"),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            return;
+          }
+
           FootballPlayer footballPlayer = FootballPlayer(
             -1,
             _nameController.text,
