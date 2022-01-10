@@ -21,29 +21,28 @@ function middleware(ctx, next) {
   });
 }
 
-const vehicles = [];
 
 const players = [{
-  id: 1,
+  pid: 1,
   name: "Gheorghe Hagi",
   team: "Galatasaray",
-  marketValue: 10000000,
+  market_value: 10000000,
   position: "LW",
   age: 56
   },
   {
-  id: 2,
+  pid: 2,
   name: "Lionel Messi",
   team: "PSG",
-  marketValue: 100000000,
+  market_value: 100000000,
   position: "RW",
   age: 34
   },
   {
-    id: 3,
+    pid: 3,
     name: "Cristiano Ronaldo",
     team: "Manchester United",
-    marketValue: 90000000,
+    market_value: 90000000,
     position: "ST",
     age: 36
     },
@@ -91,20 +90,23 @@ router.post('/player', ctx => {
       ctx.response.status = 404;
     } else {
       let maxId = Math.max.apply(Math, players.map(function (obj) {
-        return obj.id;
+        return obj.pid;
       })) + 1;
       let obj = {
-        id: maxId,
-        name,
-        status: 'new',
-        team,
-        marketValue,
-        position,
-        age
+        pid: maxId,
+        name: name,
+        team: team,
+        market_value: marketValue,
+        position: position,
+        age: age,
       };
       // console.log("created: " + JSON.stringify(license));
       players.push(obj);
-      broadcast(obj);
+      let data = {
+        player: obj,
+        operation: "add"
+      }
+      broadcast(data);
       ctx.response.body = obj;
       ctx.response.status = 200;
     }
@@ -117,22 +119,27 @@ router.post('/player', ctx => {
 
 // delete one by id
 // TODO: add broadcast for deleting
-router.del('/vehicle/:id', ctx => {
+router.del('/player/:pid', ctx => {
   // console.log("ctx: " + JSON.stringify(ctx));
   const headers = ctx.params;
   // console.log("body: " + JSON.stringify(headers));
-  const id = headers.id;
+  const id = headers.pid;
   if (typeof id !== 'undefined') {
-    const index = vehicles.findIndex(obj => obj.id == id);
+    const index = players.findIndex(obj => obj.pid == id);
     if (index === -1) {
-      console.log("No vehicle with id: " + id);
-      ctx.response.body = {text: 'Invalid vehicle id'};
+      console.log("No player with id: " + id);
+      ctx.response.body = {text: 'Invalid player id'};
       ctx.response.status = 404;
     } else {
-      let obj = vehicles[index];
+      let obj = players[index];
       // console.log("deleting: " + JSON.stringify(obj));
-      vehicles.splice(index, 1);
+      players.splice(index, 1);
       ctx.response.body = obj;
+      let data = {
+        player: id,
+        operation: "del"
+      }
+      broadcast(data)
       ctx.response.status = 200;
     }
   } else {
@@ -143,8 +150,49 @@ router.del('/vehicle/:id', ctx => {
 });
 
 // TODO: update with broadcast
+router.patch('/player/update', ctx => {
+  console.log("ctx: " + JSON.stringify(ctx));
+  const headers = ctx.request.body;
+  const id = headers.pid;
+  const name = headers.name;
+  const team = headers.team;
+  const marketValue = headers.marketValue;
+  const position = headers.position;
+  const age = headers.age;
+
+  if (typeof name !== 'undefined' && typeof team !== 'undefined' && typeof marketValue !== 'undefined'
+    && position !== 'undefined' && age !== 'undefined') {
+      const index = players.findIndex(obj => obj.id == id);
+      if (index === -1) {
+        console.log("Player doesn't exists!");
+        ctx.response.body = {text: "Player doesn't exists!"};
+        ctx.response.status = 404;
+      } else {
+        let obj = {
+          pid: id,
+          name:name,
+          team:team,
+          market_value:marketValue,
+          position:position,
+          age: age
+        };
+        players[index] = obj;
+        let data = {
+          player: obj,
+          operation: "update"
+        }
+        broadcast(data);
+        ctx.response.body = obj;
+        ctx.response.status = 200;
+      }
+  } else {
+    console.log("Missing or invalid fields!");
+    ctx.response.body = {text: 'Missing or invalid fields!'};
+    ctx.response.status = 404;
+  }
+});
 
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-server.listen(2021);
+server.listen(2022);

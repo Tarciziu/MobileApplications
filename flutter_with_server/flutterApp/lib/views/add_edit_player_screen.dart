@@ -1,16 +1,24 @@
+import 'dart:async';
+import 'dart:developer' as developer;
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:footballdb/bloc/football_player_bloc.dart';
 import 'package:footballdb/db/repository.dart';
 import 'package:footballdb/event/add_football_player.dart';
 import 'package:footballdb/event/update_football_player.dart';
 import 'package:footballdb/model/football_player.dart';
+import 'package:footballdb/service/service.dart';
 
 class AddEditPlayerScreen extends StatefulWidget {
-  AddEditPlayerScreen({this.footballPlayer, this.footballPlayerIndex});
+  AddEditPlayerScreen(
+      {this.footballPlayer, this.footballPlayerIndex, required this.service});
 
   final FootballPlayer? footballPlayer;
   final int? footballPlayerIndex;
+  final Service service;
 
   @override
   _AddEditPlayerScreenState createState() => _AddEditPlayerScreenState();
@@ -27,6 +35,7 @@ class _AddEditPlayerScreenState extends State<AddEditPlayerScreen> {
 
   void initState() {
     super.initState();
+
     if (widget.footballPlayer != null) {
       _nameController.text = widget.footballPlayer!.name;
       _teamController.text = widget.footballPlayer!.team;
@@ -79,7 +88,7 @@ class _AddEditPlayerScreenState extends State<AddEditPlayerScreen> {
         ]),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: () async {
           if (!_formKey.currentState!.validate()) {
             return;
           }
@@ -150,26 +159,78 @@ class _AddEditPlayerScreenState extends State<AddEditPlayerScreen> {
           bool ok = true;
 
           if (widget.footballPlayer == null) {
-            Repository.db.insert(footballPlayer).then((storedFootballPlayer) =>
-                BlocProvider.of<FootballPlayerBloc>(context).add(
-                  AddFootballPlayer(storedFootballPlayer),
-                ));
+            if (await Connectivity().checkConnectivity() !=
+                ConnectivityResult.none) {
+              // Repository.db.insert(footballPlayer)
+              print("internet connection");
+              await widget.service
+                  .add(footballPlayer)
+                  .then(
+                      (storedFootballPlayer) =>
+                      BlocProvider.of<FootballPlayerBloc>(context).add(
+                        AddFootballPlayer(storedFootballPlayer),
+                      )
+              )
+                  .onError((error, stackTrace) {
+                ok = false;
+                SnackBar snackBar = SnackBar(
+                  content: Text(error.toString()),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              });
+            } else {
+              Repository.db
+                  .insert(footballPlayer, 0)
+                  .then((storedFootballPlayer) =>
+                      BlocProvider.of<FootballPlayerBloc>(context).add(
+                        AddFootballPlayer(storedFootballPlayer),
+                      ))
+                  .onError((error, stackTrace) {
+                ok = false;
+                SnackBar snackBar = SnackBar(
+                  content: Text(error.toString()),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              });
+            }
           } else {
-            Repository.db
-                .update(widget.footballPlayer!)
-                .then((storedFootballPlayer) =>
-                    BlocProvider.of<FootballPlayerBloc>(context).add(
-                      UpdateFootballPlayer(
-                          widget.footballPlayerIndex!, footballPlayer),
-                    ))
-                .catchError((error) {
-              SnackBar snackBar = SnackBar(
-                content: Text(error),
-              );
-              ScaffoldMessenger.of(context).showSnackBar(snackBar);
-            });
+            if (await Connectivity().checkConnectivity() !=
+                ConnectivityResult.none) {
+              print("update");
+              await widget.service
+                  .update(widget.footballPlayer!)
+                  .then((storedFootballPlayer) =>
+                      BlocProvider.of<FootballPlayerBloc>(context).add(
+                        UpdateFootballPlayer(
+                            widget.footballPlayerIndex!, footballPlayer),
+                      ))
+                  .onError((error, stackTrace) {
+                ok = false;
+                SnackBar snackBar = SnackBar(
+                  content: Text(error.toString()),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              });
+            } else {
+              Repository.db
+                  .update(widget.footballPlayer!, 0)
+                  .then((storedFootballPlayer) =>
+                  BlocProvider.of<FootballPlayerBloc>(context).add(
+                    UpdateFootballPlayer(
+                        widget.footballPlayerIndex!, footballPlayer),
+                  ))
+                  .onError((error, stackTrace) {
+                ok = false;
+                SnackBar snackBar = SnackBar(
+                  content: Text(error.toString()),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              });
+            }
           }
-          Navigator.pop(context);
+          if (ok) {
+            Navigator.pop(context);
+          }
         },
         child: const Icon(Icons.save),
       ),

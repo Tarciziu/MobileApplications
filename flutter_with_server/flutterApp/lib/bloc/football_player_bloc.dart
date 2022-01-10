@@ -17,6 +17,7 @@ class FootballPlayerBloc extends Bloc<FootballPlayerEvent, List<FootballPlayer>>
       yield event.footballPlayersList;
     } else if (event is AddFootballPlayer) {
       List<FootballPlayer> newState = List.from(state);
+      newState.removeWhere((element) => element.pid == event.newFootballPlayer.pid);
       if (event.newFootballPlayer != null) {
         newState.add(event.newFootballPlayer);
       }
@@ -28,6 +29,21 @@ class FootballPlayerBloc extends Bloc<FootballPlayerEvent, List<FootballPlayer>>
     } else if (event is UpdateFootballPlayer) {
       List<FootballPlayer> newState = List.from(state);
       newState[event.footballPlayerIndex] = event.newFootballPlayer;
+      yield newState;
+    } else if (event is UpdateFootballPlayerFromBroadcast) {
+      List<FootballPlayer> newState = List.from(state);
+      int index = newState.indexOf();
+      newState[index] = event.newFootballPlayer;
+      yield newState;
+    } else if (event is DeleteFootballPlayerFromBroadcast) {
+      print("DeleteFootballPlayerFromBroadcast");
+      print(event.footballPlayerId);
+      List<FootballPlayer> newState = List.from(state);
+      print("new state1");
+      print(newState);
+      newState.removeWhere((element) => element.pid == event.footballPlayerId);
+      print("new state2");
+      print(newState);
       yield newState;
     }
   }

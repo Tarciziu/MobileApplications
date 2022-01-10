@@ -5,3 +5,9 @@ class DeleteFootballPlayer extends FootballPlayerEvent {
 
   DeleteFootballPlayer(this.footballPlayerIndex);
 }
+
+class DeleteFootballPlayerFromBroadcast extends FootballPlayerEvent {
+  int footballPlayerId;
+
+  DeleteFootballPlayerFromBroadcast(this.footballPlayerId);
+}

@@ -7,3 +7,9 @@ class UpdateFootballPlayer extends FootballPlayerEvent {
 
   UpdateFootballPlayer(this.footballPlayerIndex, this.newFootballPlayer);
 }
+
+class UpdateFootballPlayerFromBroadcast extends FootballPlayerEvent {
+  FootballPlayer newFootballPlayer;
+
+  UpdateFootballPlayerFromBroadcast(this.newFootballPlayer);
+}

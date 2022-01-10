@@ -5,12 +5,13 @@ import 'package:sqflite/sqlite_api.dart';
 
 class Repository {
   static const String TABLE_FOOTBALLPLAYERS = "footballplayers";
-  static const String COLUMN_ID = "id";
+  static const String COLUMN_PID = "pid";
   static const String COLUMN_NAME = "name";
   static const String COLUMN_TEAM = "team";
   static const String COLUMN_MARKET_VALUE = "market_value";
   static const String COLUMN_POSITION = "position";
   static const String COLUMN_AGE = "age";
+  static const String COLUMN_FLAG = "flag";
 
   Repository._();
   static final Repository db = Repository._();
@@ -40,12 +41,13 @@ class Repository {
 
         await database.execute(
           "CREATE TABLE $TABLE_FOOTBALLPLAYERS ("
-              "$COLUMN_ID INTEGER PRIMARY KEY,"
+              "$COLUMN_PID INTEGER,"
               "$COLUMN_NAME TEXT,"
               "$COLUMN_TEAM TEXT,"
               "$COLUMN_MARKET_VALUE INTEGER,"
               "$COLUMN_POSITION TEXT,"
-              "$COLUMN_AGE INTEGER"
+              "$COLUMN_AGE INTEGER,"
+              "$COLUMN_FLAG INTEGER"
               ")",
         );
       },
@@ -57,7 +59,7 @@ class Repository {
     final db = await database;
 
     var players = await db!
-        .query(TABLE_FOOTBALLPLAYERS, columns: [COLUMN_ID, COLUMN_NAME,
+        .query(TABLE_FOOTBALLPLAYERS, columns: [COLUMN_PID, COLUMN_NAME,
       COLUMN_TEAM, COLUMN_MARKET_VALUE, COLUMN_POSITION, COLUMN_AGE]);
 
     List<FootballPlayer> footballPlayerList = <FootballPlayer>[];
@@ -71,10 +73,11 @@ class Repository {
     return footballPlayerList;
   }
 
-  Future<FootballPlayer> insert(FootballPlayer footballPlayer) async {
+  Future<FootballPlayer> insert(FootballPlayer footballPlayer, int flag) async {
     print("database insert");
     final db = await database;
-    footballPlayer.id = await db!.insert(TABLE_FOOTBALLPLAYERS, footballPlayer.toMap());
+    await db!.insert(TABLE_FOOTBALLPLAYERS, footballPlayer.toMap(flag), conflictAlgorithm: ConflictAlgorithm.replace);
+
     return footballPlayer;
   }
 
@@ -82,22 +85,65 @@ class Repository {
     print("database delete");
     final db = await database;
 
-    return await db!.delete(
+    await db!.delete(
       TABLE_FOOTBALLPLAYERS,
-      where: "id = ?",
+      where: "pid = ?",
       whereArgs: [id],
     );
+
+    return id;
   }
 
-  Future<int> update(FootballPlayer footballPlayer) async {
+  Future<FootballPlayer> update(FootballPlayer footballPlayer, int flag) async {
     print("database update");
     final db = await database;
 
-    return await db!.update(
+    await db!.update(
       TABLE_FOOTBALLPLAYERS,
-      footballPlayer.toMap(),
-      where: "id = ?",
-      whereArgs: [footballPlayer.id],
+      footballPlayer.toMap(flag),
+      where: "pid = ?",
+      whereArgs: [footballPlayer.pid],
     );
+
+    return footballPlayer;
+  }
+
+  Future<List<FootballPlayer>> getByFlag(int i) async {
+    final db = await database;
+
+    var players = await db!
+        .query(TABLE_FOOTBALLPLAYERS, columns: [COLUMN_PID, COLUMN_NAME,
+      COLUMN_TEAM, COLUMN_MARKET_VALUE, COLUMN_POSITION, COLUMN_AGE], where: "flag = ?", whereArgs: [i]);
+
+    List<FootballPlayer> footballPlayerList = <FootballPlayer>[];
+
+    for (var currentPlayer in players) {
+      FootballPlayer footballPlayer = FootballPlayer.fromMap(currentPlayer);
+
+      footballPlayerList.add(footballPlayer);
+    }
+
+    return footballPlayerList;
+  }
+
+  Future<FootballPlayer?> getById(int id) async {
+    final db = await database;
+
+    var players = await db!
+        .query(TABLE_FOOTBALLPLAYERS, columns: [COLUMN_PID, COLUMN_NAME,
+      COLUMN_TEAM, COLUMN_MARKET_VALUE, COLUMN_POSITION, COLUMN_AGE], where: "pid = ?", whereArgs: [id]);
+
+    List<FootballPlayer> footballPlayerList = <FootballPlayer>[];
+
+    for (var currentPlayer in players) {
+      FootballPlayer footballPlayer = FootballPlayer.fromMap(currentPlayer);
+      print("getOne"+footballPlayer.toString());
+      footballPlayerList.add(footballPlayer);
+    }
+
+    if (footballPlayerList.length > 0) {
+      return footballPlayerList.first;
+    }
+    return null;
   }
 }
