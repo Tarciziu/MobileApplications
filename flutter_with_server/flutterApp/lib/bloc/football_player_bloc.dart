@@ -32,8 +32,10 @@ class FootballPlayerBloc extends Bloc<FootballPlayerEvent, List<FootballPlayer>>
       yield newState;
     } else if (event is UpdateFootballPlayerFromBroadcast) {
       List<FootballPlayer> newState = List.from(state);
-      int index = newState.indexOf();
-      newState[index] = event.newFootballPlayer;
+      for(var i = 0; i < newState.length; i++){
+        if (newState[i].pid == event.newFootballPlayer.pid)
+          newState[i] = event.newFootballPlayer;
+      }
       yield newState;
     } else if (event is DeleteFootballPlayerFromBroadcast) {
       print("DeleteFootballPlayerFromBroadcast");

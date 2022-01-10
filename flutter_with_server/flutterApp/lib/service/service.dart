@@ -47,19 +47,19 @@ class Service {
           "pid": footballPlayer.pid,
           "name": footballPlayer.name,
           "team": footballPlayer.team,
-          "marketValue": footballPlayer.marketValue,
+          "market_value": footballPlayer.marketValue,
           "position": footballPlayer.position,
           "age": footballPlayer.age,
         }));
     if (response.statusCode == 200) {
       Map data = jsonDecode(response.body);
       final player = FootballPlayer(
-        int.parse(data["pid"]),
+        data["pid"],
         data["name"],
         data["team"],
-        int.parse(data["marketValue"]),
+        data["marketValue"],
         data["position"],
-        int.parse(data["age"]),);
+        data["age"]);
       return Repository.db.update(player, 1);
     } else {
       throw HttpException(jsonDecode(response.body)["text"]);
@@ -88,12 +88,12 @@ class Service {
     for (FootballPlayer player in list) {
       print("Offline added");
       print(player.name);
-      addOnline(player);
+      await addOnline(player);
     }
   }
 
-  void addOnline(FootballPlayer footballPlayer) async {
-    var response = await post(Uri.http(domain, "/player"),
+  Future<void> addOnline(FootballPlayer footballPlayer) async {
+    await post(Uri.http(domain, "/player"),
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode({
           "name": footballPlayer.name,
@@ -106,19 +106,21 @@ class Service {
 
   Future<void> clearLocalStorage() async {
     List<FootballPlayer> list = await Repository.db.getPlayers();
+    print(list);
     for (FootballPlayer player in list) {
-      Repository.db.delete(player.pid);
+      await Repository.db.delete(player.pid);
     }
+    print(list);
   }
 
-  Future populateLocalStorage() async {
+  Future<void> populateLocalStorage() async {
     Response response = await get(Uri.http(domain, "/all"));
 
     if (response.statusCode == 200) {
       Iterable iterable = jsonDecode(response.body);
       List<FootballPlayer> players = List<FootballPlayer>.from(iterable.map((map) => FootballPlayer.fromMap(map)));
       for (var player in players) {
-        Repository.db.insert(player, 1);
+        await Repository.db.insert(player, 1);
       }
     } else {
       throw Exception('');

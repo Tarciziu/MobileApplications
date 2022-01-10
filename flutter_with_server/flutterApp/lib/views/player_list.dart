@@ -44,22 +44,10 @@ class _FootballPlayerListState extends State<FootballPlayerList> {
     initConnectivity();
 
     _connectivitySubscription =
-        _connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
+        _connectivity.onConnectivityChanged.listen((ConnectivityResult result) async {
           setState(() {
             _connectionStatus = result;
           });
-          try {
-            _log.fine('Getting questions started...');
-            if (_connectionStatus != ConnectivityResult.none) {
-              populateLocalStorage();
-            }
-            _log.fine('Success on getting questions.');
-          } catch (e) {
-            _log.severe('Error on getting questions. No internet.');
-            Fluttertoast.showToast(
-                msg: 'Error while trying getting questions... Offline.');
-          }
-
           if (_connectionStatus != ConnectivityResult.none) {
             _channel =
                 WebSocketChannel.connect(Uri.parse('ws://10.0.2.2:2022/ws'));
@@ -84,13 +72,27 @@ class _FootballPlayerListState extends State<FootballPlayerList> {
                       BlocProvider.of<FootballPlayerBloc>(context).add(
                         DeleteFootballPlayerFromBroadcast(deleted),
                       ));
-                  }
-                  } catch (e)
-                  {
-                    print(e);
-                  }
-                });
+                }
+              } catch (e)
+              {
+                print(e);
+              }
+            });
           }
+
+          try {
+            _log.fine('Getting questions started...');
+            if (_connectionStatus != ConnectivityResult.none) {
+              await populateLocalStorage();
+            }
+            _log.fine('Success on getting questions.');
+          } catch (e) {
+            _log.severe('Error on getting questions. No internet.');
+            Fluttertoast.showToast(
+                msg: 'Error while trying getting questions... Offline.');
+          }
+
+
           Repository.db.getPlayers().then(
                 (footballPlayerList) {
               BlocProvider.of<FootballPlayerBloc>(context)

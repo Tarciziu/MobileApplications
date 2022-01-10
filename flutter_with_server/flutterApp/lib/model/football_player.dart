@@ -23,9 +23,7 @@ class FootballPlayer {
       Repository.COLUMN_FLAG: flag,
     };
 
-    if (pid != -1) {
-      map[Repository.COLUMN_PID] = pid;
-    }
+    map[Repository.COLUMN_PID] = pid;
 
     return map;
   }

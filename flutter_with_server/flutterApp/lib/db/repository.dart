@@ -76,7 +76,7 @@ class Repository {
   Future<FootballPlayer> insert(FootballPlayer footballPlayer, int flag) async {
     print("database insert");
     final db = await database;
-    await db!.insert(TABLE_FOOTBALLPLAYERS, footballPlayer.toMap(flag), conflictAlgorithm: ConflictAlgorithm.replace);
+    await db!.insert(TABLE_FOOTBALLPLAYERS, footballPlayer.toMap(flag));
 
     return footballPlayer;
   }

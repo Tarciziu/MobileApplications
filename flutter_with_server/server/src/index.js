@@ -151,18 +151,18 @@ router.del('/player/:pid', ctx => {
 
 // TODO: update with broadcast
 router.patch('/player/update', ctx => {
-  console.log("ctx: " + JSON.stringify(ctx));
+  console.log("ctx: " + JSON.stringify(ctx.request.body));
   const headers = ctx.request.body;
   const id = headers.pid;
   const name = headers.name;
   const team = headers.team;
-  const marketValue = headers.marketValue;
+  const marketValue = headers.market_value;
   const position = headers.position;
   const age = headers.age;
 
   if (typeof name !== 'undefined' && typeof team !== 'undefined' && typeof marketValue !== 'undefined'
     && position !== 'undefined' && age !== 'undefined') {
-      const index = players.findIndex(obj => obj.id == id);
+      const index = players.findIndex(obj => obj.pid == id);
       if (index === -1) {
         console.log("Player doesn't exists!");
         ctx.response.body = {text: "Player doesn't exists!"};

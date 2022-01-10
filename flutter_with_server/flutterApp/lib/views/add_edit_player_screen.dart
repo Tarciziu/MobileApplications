@@ -165,12 +165,10 @@ class _AddEditPlayerScreenState extends State<AddEditPlayerScreen> {
               print("internet connection");
               await widget.service
                   .add(footballPlayer)
-                  .then(
-                      (storedFootballPlayer) =>
+                  .then((storedFootballPlayer) =>
                       BlocProvider.of<FootballPlayerBloc>(context).add(
                         AddFootballPlayer(storedFootballPlayer),
-                      )
-              )
+                      ))
                   .onError((error, stackTrace) {
                 ok = false;
                 SnackBar snackBar = SnackBar(
@@ -197,8 +195,9 @@ class _AddEditPlayerScreenState extends State<AddEditPlayerScreen> {
             if (await Connectivity().checkConnectivity() !=
                 ConnectivityResult.none) {
               print("update");
+              footballPlayer.pid = widget.footballPlayer!.pid;
               await widget.service
-                  .update(widget.footballPlayer!)
+                  .update(footballPlayer)
                   .then((storedFootballPlayer) =>
                       BlocProvider.of<FootballPlayerBloc>(context).add(
                         UpdateFootballPlayer(
@@ -212,20 +211,10 @@ class _AddEditPlayerScreenState extends State<AddEditPlayerScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
               });
             } else {
-              Repository.db
-                  .update(widget.footballPlayer!, 0)
-                  .then((storedFootballPlayer) =>
-                  BlocProvider.of<FootballPlayerBloc>(context).add(
-                    UpdateFootballPlayer(
-                        widget.footballPlayerIndex!, footballPlayer),
-                  ))
-                  .onError((error, stackTrace) {
-                ok = false;
-                SnackBar snackBar = SnackBar(
-                  content: Text(error.toString()),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
-              });
+              SnackBar snackBar = const SnackBar(
+                content: Text("Internet connection needed for update"),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(snackBar);
             }
           }
           if (ok) {
